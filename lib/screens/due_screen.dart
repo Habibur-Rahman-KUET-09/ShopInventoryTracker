@@ -93,6 +93,7 @@ class DueScreen extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'due_fab',
         onPressed: () {
           Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => const AddDueCustomerScreen(),

@@ -113,6 +113,7 @@ class _StockScreenState extends State<StockScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'stock_fab',
         onPressed: () {
           Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => const AddEditProductScreen(),

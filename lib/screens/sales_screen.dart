@@ -63,6 +63,7 @@ class SalesScreen extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'sales_fab',
         onPressed: () {
           Navigator.of(context)
               .push(MaterialPageRoute(builder: (_) => const AddSaleScreen()));
