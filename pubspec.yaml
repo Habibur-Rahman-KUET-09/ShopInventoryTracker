@@ -42,6 +42,8 @@ dependencies:
   intl: ^0.20.2
   fl_chart: ^0.69.2
   uuid: ^4.5.1
+  share_plus: ^13.3.0
+  file_picker: ^12.3.0
 
 dev_dependencies:
   flutter_test:

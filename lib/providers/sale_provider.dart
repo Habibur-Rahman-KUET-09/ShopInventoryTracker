@@ -36,14 +36,31 @@ class SaleProvider extends ChangeNotifier {
         .toList();
   }
 
+  /// All sales attributed to a given customer, most recent first.
+  List<Sale> salesForCustomer(String customerId) =>
+      _sales.where((s) => s.customerId == customerId).toList();
+
   void _load() {
     _sales = _repository.getAll();
     notifyListeners();
   }
 
-  Future<void> addSale(List<SaleItem> items) async {
+  /// Re-reads all sales from storage. Used after a data import.
+  void refresh() => _load();
+
+  Future<void> addSale(
+    List<SaleItem> items, {
+    String? customerId,
+    String? customerName,
+  }) async {
     if (items.isEmpty) return;
-    final sale = Sale(id: _uuid.v4(), dateTime: DateTime.now(), items: items);
+    final sale = Sale(
+      id: _uuid.v4(),
+      dateTime: DateTime.now(),
+      items: items,
+      customerId: customerId,
+      customerName: customerName,
+    );
     await _repository.save(sale);
     for (final item in items) {
       await _productProvider.decrementStock(item.productId, item.quantity);

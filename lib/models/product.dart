@@ -1,6 +1,7 @@
 class Product {
   final String id;
   String name;
+  String brand;
   double buyPrice;
   double sellPrice;
   int quantity;
@@ -10,6 +11,7 @@ class Product {
   Product({
     required this.id,
     required this.name,
+    this.brand = '',
     required this.buyPrice,
     required this.sellPrice,
     required this.quantity,
@@ -23,6 +25,7 @@ class Product {
     return {
       'id': id,
       'name': name,
+      'brand': brand,
       'buyPrice': buyPrice,
       'sellPrice': sellPrice,
       'quantity': quantity,
@@ -35,6 +38,7 @@ class Product {
     return Product(
       id: map['id'] as String,
       name: map['name'] as String,
+      brand: (map['brand'] as String?) ?? '',
       buyPrice: (map['buyPrice'] as num).toDouble(),
       sellPrice: (map['sellPrice'] as num).toDouble(),
       quantity: map['quantity'] as int,

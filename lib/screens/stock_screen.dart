@@ -7,7 +7,9 @@ import '../utils/formatters.dart';
 import 'add_edit_product_screen.dart';
 
 class StockScreen extends StatefulWidget {
-  const StockScreen({super.key});
+  final bool lowStockOnly;
+
+  const StockScreen({super.key, this.lowStockOnly = false});
 
   @override
   State<StockScreen> createState() => _StockScreenState();
@@ -19,12 +21,16 @@ class _StockScreenState extends State<StockScreen> {
   @override
   Widget build(BuildContext context) {
     final products = context.watch<ProductProvider>().products.where((p) {
+      if (widget.lowStockOnly && !p.isLowStock) return false;
       if (_query.isEmpty) return true;
-      return p.name.toLowerCase().contains(_query.toLowerCase());
+      final q = _query.toLowerCase();
+      return p.name.toLowerCase().contains(q) ||
+          p.brand.toLowerCase().contains(q);
     }).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('স্টক ম্যানেজমেন্ট')),
+      appBar: AppBar(
+          title: Text(widget.lowStockOnly ? 'লো-স্টক পণ্য' : 'স্টক ম্যানেজমেন্ট')),
       body: Column(
         children: [
           Padding(
@@ -56,6 +62,7 @@ class _StockScreenState extends State<StockScreen> {
                           subtitle: Padding(
                             padding: const EdgeInsets.only(top: 4),
                             child: Text(
+                              '${product.brand.isNotEmpty ? '${product.brand}  •  ' : ''}'
                               'ক্রয়: ${Formatters.taka(product.buyPrice)}  •  বিক্রয়: ${Formatters.taka(product.sellPrice)}',
                               style: TextStyle(color: Colors.grey.shade600),
                             ),

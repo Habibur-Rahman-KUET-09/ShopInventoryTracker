@@ -9,6 +9,12 @@ import '../providers/sale_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
 import '../widgets/stat_card.dart';
+import 'backup_screen.dart';
+import 'customers_screen.dart';
+import 'due_screen.dart';
+import 'reports_screen.dart';
+import 'sales_screen.dart';
+import 'stock_screen.dart';
 
 enum _Period { daily, weekly, monthly }
 
@@ -116,6 +122,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final allSales = context.watch<SaleProvider>().sales;
+    final products = context.watch<ProductProvider>().products;
     final lowStockCount =
         context.watch<ProductProvider>().lowStockProducts.length;
     final totalDue = context.watch<DueProvider>().totalOutstanding;
@@ -132,7 +139,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
         : buckets.map((b) => b.value).reduce((a, b) => a > b ? a : b);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('দোকান হিসাব')),
+      appBar: AppBar(
+        title: const Text('দোকান হিসাব'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.people_outline),
+            tooltip: 'গ্রাহক',
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const CustomersScreen(),
+              ));
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.bar_chart_outlined),
+            tooltip: 'রিপোর্ট',
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const ReportsScreen(),
+              ));
+            },
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'backup',
+                child: Text('ডেটা এক্সপোর্ট/ইমপোর্ট'),
+              ),
+            ],
+            onSelected: (_) {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const BackupScreen(),
+              ));
+            },
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
@@ -149,29 +192,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
             mainAxisSpacing: 12,
             childAspectRatio: 1.5,
             children: [
-              StatCard(
-                label: 'মোট বিক্রি',
-                value: Formatters.taka(totalSales),
-                icon: Icons.point_of_sale,
-                color: AppTheme.primaryGreen,
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const SalesScreen(),
+                )),
+                child: StatCard(
+                  label: 'মোট বিক্রি',
+                  value: Formatters.taka(totalSales),
+                  icon: Icons.point_of_sale,
+                  color: AppTheme.primaryGreen,
+                ),
               ),
-              StatCard(
-                label: 'মোট লাভ',
-                value: Formatters.taka(totalProfit),
-                icon: Icons.trending_up,
-                color: AppTheme.accentOrange,
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const ReportsScreen(),
+                )),
+                child: StatCard(
+                  label: 'মোট লাভ',
+                  value: Formatters.taka(totalProfit),
+                  icon: Icons.trending_up,
+                  color: AppTheme.accentOrange,
+                ),
               ),
-              StatCard(
-                label: 'মোট বাকি',
-                value: Formatters.taka(totalDue),
-                icon: Icons.receipt_long,
-                color: Colors.blueGrey,
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const DueScreen(),
+                )),
+                child: StatCard(
+                  label: 'মোট বাকি',
+                  value: Formatters.taka(totalDue),
+                  icon: Icons.receipt_long,
+                  color: Colors.blueGrey,
+                ),
               ),
-              StatCard(
-                label: 'লো-স্টক পণ্য',
-                value: '$lowStockCount টি',
-                icon: Icons.warning_amber_rounded,
-                color: AppTheme.dangerRed,
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const StockScreen(lowStockOnly: true),
+                )),
+                child: StatCard(
+                  label: 'লো-স্টক পণ্য',
+                  value: '$lowStockCount টি',
+                  icon: Icons.warning_amber_rounded,
+                  color: AppTheme.dangerRed,
+                ),
               ),
             ],
           ),
@@ -275,6 +338,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         '${topProducts[i].value} পিস বিক্রি',
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
+                      onTap: () {
+                        final match = products
+                            .where((p) => p.name == topProducts[i].key);
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => ReportsScreen(
+                            initialProductId:
+                                match.isEmpty ? null : match.first.id,
+                          ),
+                        ));
+                      },
                     ),
                 ],
               ),

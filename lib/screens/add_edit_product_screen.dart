@@ -16,6 +16,7 @@ class AddEditProductScreen extends StatefulWidget {
 class _AddEditProductScreenState extends State<AddEditProductScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameCtrl;
+  late final TextEditingController _brandCtrl;
   late final TextEditingController _buyPriceCtrl;
   late final TextEditingController _sellPriceCtrl;
   late final TextEditingController _quantityCtrl;
@@ -28,6 +29,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     super.initState();
     final p = widget.product;
     _nameCtrl = TextEditingController(text: p?.name ?? '');
+    _brandCtrl = TextEditingController(text: p?.brand ?? '');
     _buyPriceCtrl = TextEditingController(
         text: p != null ? _trimZero(p.buyPrice) : '');
     _sellPriceCtrl = TextEditingController(
@@ -45,6 +47,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _brandCtrl.dispose();
     _buyPriceCtrl.dispose();
     _sellPriceCtrl.dispose();
     _quantityCtrl.dispose();
@@ -56,6 +59,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     if (!_formKey.currentState!.validate()) return;
     final provider = context.read<ProductProvider>();
     final name = _nameCtrl.text.trim();
+    final brand = _brandCtrl.text.trim();
     final buyPrice = double.parse(_buyPriceCtrl.text);
     final sellPrice = double.parse(_sellPriceCtrl.text);
     final quantity = int.parse(_quantityCtrl.text);
@@ -64,6 +68,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     if (isEditing) {
       final p = widget.product!;
       p.name = name;
+      p.brand = brand;
       p.buyPrice = buyPrice;
       p.sellPrice = sellPrice;
       p.quantity = quantity;
@@ -72,6 +77,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     } else {
       await provider.addProduct(
         name: name,
+        brand: brand,
         buyPrice: buyPrice,
         sellPrice: sellPrice,
         quantity: quantity,
@@ -130,6 +136,40 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               textInputAction: TextInputAction.next,
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? 'পণ্যের নাম লিখুন' : null,
+            ),
+            const SizedBox(height: 14),
+            TextFormField(
+              controller: _brandCtrl,
+              decoration: const InputDecoration(
+                labelText: 'ব্র্যান্ড',
+                helperText: 'নতুন ব্র্যান্ড লিখলে সেটাও তালিকায় যোগ হয়ে যাবে',
+              ),
+              textInputAction: TextInputAction.next,
+            ),
+            Consumer<ProductProvider>(
+              builder: (context, provider, _) => ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _brandCtrl,
+                builder: (context, value, _) {
+                  final suggestions = provider.brands
+                      .where((b) => b.toLowerCase() != value.text.trim().toLowerCase())
+                      .toList();
+                  if (suggestions.isEmpty) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: suggestions
+                          .map((b) => ActionChip(
+                                label: Text(b),
+                                onPressed: () =>
+                                    setState(() => _brandCtrl.text = b),
+                              ))
+                          .toList(),
+                    ),
+                  );
+                },
+              ),
             ),
             const SizedBox(height: 14),
             Row(

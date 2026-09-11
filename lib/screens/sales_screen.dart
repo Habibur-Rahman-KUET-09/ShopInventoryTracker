@@ -89,7 +89,8 @@ class _SaleCard extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         subtitle: Text(
-          '${Formatters.dateTime(sale.dateTime)}  •  ${sale.totalQuantity} আইটেম',
+          '${Formatters.dateTime(sale.dateTime)}  •  ${sale.totalQuantity} আইটেম'
+          '${sale.customerName != null ? '  •  ${sale.customerName}' : ''}',
           style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
         ),
         trailing: IconButton(

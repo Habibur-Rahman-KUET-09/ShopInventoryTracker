@@ -4,11 +4,15 @@ class Sale {
   final String id;
   final DateTime dateTime;
   final List<SaleItem> items;
+  final String? customerId;
+  final String? customerName;
 
   Sale({
     required this.id,
     required this.dateTime,
     required this.items,
+    this.customerId,
+    this.customerName,
   });
 
   double get totalAmount => items.fold(0, (sum, item) => sum + item.total);
@@ -20,6 +24,8 @@ class Sale {
       'id': id,
       'dateTime': dateTime.toIso8601String(),
       'items': items.map((e) => e.toMap()).toList(),
+      'customerId': customerId,
+      'customerName': customerName,
     };
   }
 
@@ -30,6 +36,8 @@ class Sale {
       items: (map['items'] as List)
           .map((e) => SaleItem.fromMap(Map<dynamic, dynamic>.from(e as Map)))
           .toList(),
+      customerId: map['customerId'] as String?,
+      customerName: map['customerName'] as String?,
     );
   }
 }

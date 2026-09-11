@@ -18,10 +18,21 @@ class ProductProvider extends ChangeNotifier {
   List<Product> get lowStockProducts =>
       _products.where((p) => p.isLowStock).toList();
 
+  /// Distinct, sorted brand names already used on some product — powers the
+  /// brand autocomplete suggestions when adding/editing stock.
+  List<String> get brands {
+    final set = _products.map((p) => p.brand).where((b) => b.isNotEmpty).toSet();
+    final list = set.toList()..sort();
+    return list;
+  }
+
   void _load() {
     _products = _repository.getAll();
     notifyListeners();
   }
+
+  /// Re-reads all products from storage. Used after a data import.
+  void refresh() => _load();
 
   Product? byId(String id) {
     for (final p in _products) {
@@ -32,6 +43,7 @@ class ProductProvider extends ChangeNotifier {
 
   Future<void> addProduct({
     required String name,
+    String brand = '',
     required double buyPrice,
     required double sellPrice,
     required int quantity,
@@ -40,6 +52,7 @@ class ProductProvider extends ChangeNotifier {
     final product = Product(
       id: _uuid.v4(),
       name: name,
+      brand: brand,
       buyPrice: buyPrice,
       sellPrice: sellPrice,
       quantity: quantity,

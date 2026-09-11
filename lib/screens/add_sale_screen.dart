@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/due_customer.dart';
 import '../models/product.dart';
 import '../models/sale_item.dart';
 import '../providers/product_provider.dart';
 import '../providers/sale_provider.dart';
 import '../utils/formatters.dart';
+import '../widgets/customer_picker_field.dart';
 
 class AddSaleScreen extends StatefulWidget {
   const AddSaleScreen({super.key});
@@ -17,6 +19,7 @@ class AddSaleScreen extends StatefulWidget {
 class _AddSaleScreenState extends State<AddSaleScreen> {
   final Map<String, int> _cart = {}; // productId -> quantity
   String _query = '';
+  DueCustomer? _customer;
 
   double get _cartTotal {
     final products = context.read<ProductProvider>().products;
@@ -66,7 +69,11 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       );
     }).toList();
 
-    await context.read<SaleProvider>().addSale(items);
+    await context.read<SaleProvider>().addSale(
+          items,
+          customerId: _customer?.id,
+          customerName: _customer?.name,
+        );
     if (mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -101,6 +108,13 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: CustomerPickerField(
+                    selected: _customer,
+                    onChanged: (c) => setState(() => _customer = c),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                   child: TextField(
                     decoration: const InputDecoration(
                       hintText: 'পণ্য খুঁজুন...',

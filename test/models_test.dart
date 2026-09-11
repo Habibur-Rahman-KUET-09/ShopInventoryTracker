@@ -27,6 +27,7 @@ void main() {
       final product = Product(
         id: '1',
         name: 'তেল',
+        brand: 'রূপচাঁদা',
         buyPrice: 150,
         sellPrice: 170,
         quantity: 20,
@@ -34,9 +35,22 @@ void main() {
       final restored = Product.fromMap(product.toMap());
       expect(restored.id, product.id);
       expect(restored.name, product.name);
+      expect(restored.brand, product.brand);
       expect(restored.buyPrice, product.buyPrice);
       expect(restored.sellPrice, product.sellPrice);
       expect(restored.quantity, product.quantity);
+    });
+
+    test('brand defaults to empty string when missing from map', () {
+      final product = Product(
+        id: '1',
+        name: 'তেল',
+        buyPrice: 150,
+        sellPrice: 170,
+        quantity: 20,
+      );
+      final restored = Product.fromMap(product.toMap());
+      expect(restored.brand, '');
     });
   });
 
@@ -66,6 +80,32 @@ void main() {
       expect(sale.totalAmount, 2 * 60 + 3 * 100);
       expect(sale.totalProfit, 2 * (60 - 50) + 3 * (100 - 80));
       expect(sale.totalQuantity, 5);
+    });
+
+    test('round-trips optional customer info through map', () {
+      final sale = Sale(
+        id: 's1',
+        dateTime: DateTime(2026, 1, 1),
+        items: [
+          SaleItem(
+            productId: 'p1',
+            productName: 'চাল',
+            quantity: 1,
+            sellPrice: 60,
+            buyPrice: 50,
+          ),
+        ],
+        customerId: 'c1',
+        customerName: 'রহিম',
+      );
+      final restored = Sale.fromMap(sale.toMap());
+      expect(restored.customerId, 'c1');
+      expect(restored.customerName, 'রহিম');
+
+      final guestSale = Sale(id: 's2', dateTime: DateTime(2026, 1, 1), items: []);
+      final restoredGuest = Sale.fromMap(guestSale.toMap());
+      expect(restoredGuest.customerId, isNull);
+      expect(restoredGuest.customerName, isNull);
     });
   });
 
