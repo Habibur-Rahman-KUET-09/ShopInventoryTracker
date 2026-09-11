@@ -11,7 +11,7 @@ import '../theme/app_theme.dart';
 /// Typing a name that matches an existing customer lets the user select it
 /// (auto-filling phone and every other detail from the stored record);
 /// typing a new name offers a one-tap "নতুন গ্রাহক হিসেবে যোগ করুন" action.
-class CustomerPickerField extends StatelessWidget {
+class CustomerPickerField extends StatefulWidget {
   final DueCustomer? selected;
   final ValueChanged<DueCustomer?> onChanged;
   final String label;
@@ -23,38 +23,62 @@ class CustomerPickerField extends StatelessWidget {
     this.label = 'গ্রাহক (ঐচ্ছিক)',
   });
 
-  Future<void> _open(BuildContext context) async {
+  @override
+  State<CustomerPickerField> createState() => _CustomerPickerFieldState();
+}
+
+class _CustomerPickerFieldState extends State<CustomerPickerField> {
+  late final TextEditingController _controller = TextEditingController(
+    text: _displayText(widget.selected),
+  );
+
+  String _displayText(DueCustomer? c) {
+    if (c == null) return '';
+    return '${c.name}${c.phone.isNotEmpty ? ' • ${c.phone}' : ''}';
+  }
+
+  @override
+  void didUpdateWidget(covariant CustomerPickerField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selected != widget.selected) {
+      _controller.text = _displayText(widget.selected);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _open() async {
     final result = await showModalBottomSheet<_PickResult>(
       context: context,
       isScrollControlled: true,
       builder: (_) => const _CustomerPickerSheet(),
     );
-    if (result != null) onChanged(result.customer);
+    if (result != null) widget.onChanged(result.customer);
   }
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () => _open(context),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          suffixIcon: selected != null
-              ? IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => onChanged(null),
-                )
-              : const Icon(Icons.person_search),
-        ),
-        child: Text(
-          selected != null
-              ? '${selected!.name}${selected!.phone.isNotEmpty ? ' • ${selected!.phone}' : ''}'
-              : 'গ্রাহক খুঁজুন বা নতুন যোগ করুন',
-          style: TextStyle(
-            color: selected != null ? Colors.black87 : Colors.grey.shade500,
-          ),
-        ),
+    // A real (read-only) form field renders the floating label exactly like
+    // every other input in the app; a bare InputDecorator misjudges the
+    // label's vertical anchor and overlaps the box's top border.
+    return TextFormField(
+      controller: _controller,
+      readOnly: true,
+      showCursor: false,
+      onTap: _open,
+      decoration: InputDecoration(
+        labelText: widget.label,
+        hintText: 'গ্রাহক খুঁজুন বা নতুন যোগ করুন',
+        suffixIcon: widget.selected != null
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => widget.onChanged(null),
+              )
+            : const Icon(Icons.person_search),
       ),
     );
   }
@@ -104,9 +128,10 @@ class _CustomerPickerSheetState extends State<_CustomerPickerSheet> {
           Row(
             children: [
               const Expanded(
-                child: Text('গ্রাহক নির্বাচন করুন',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: Text(
+                  'গ্রাহক নির্বাচন করুন',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
               TextButton(
                 onPressed: () =>
@@ -136,22 +161,26 @@ class _CustomerPickerSheetState extends State<_CustomerPickerSheet> {
                   final c = matches[index];
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundColor:
-                          AppTheme.primaryGreen.withValues(alpha: 0.12),
+                      backgroundColor: AppTheme.primaryGreen.withValues(
+                        alpha: 0.12,
+                      ),
                       foregroundColor: AppTheme.primaryGreen,
-                      child: Text(c.name.isNotEmpty ? c.name.substring(0, 1) : '?'),
+                      child: Text(
+                        c.name.isNotEmpty ? c.name.substring(0, 1) : '?',
+                      ),
                     ),
                     title: Text(c.name),
                     subtitle: c.phone.isNotEmpty ? Text(c.phone) : null,
-                    onTap: () =>
-                        Navigator.of(context).pop(_PickResult(c)),
+                    onTap: () => Navigator.of(context).pop(_PickResult(c)),
                   );
                 },
               ),
             )
           else if (_query.trim().isNotEmpty) ...[
-            Text('"${_query.trim()}" নামে কোনো বিদ্যমান গ্রাহক নেই',
-                style: TextStyle(color: Colors.grey.shade600)),
+            Text(
+              '"${_query.trim()}" নামে কোনো বিদ্যমান গ্রাহক নেই',
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
             const SizedBox(height: 10),
             TextField(
               controller: _phoneCtrl,
@@ -165,9 +194,9 @@ class _CustomerPickerSheetState extends State<_CustomerPickerSheet> {
               onPressed: () async {
                 final name = _query.trim();
                 final customer = await context.read<DueProvider>().addCustomer(
-                      name: name,
-                      phone: _phoneCtrl.text.trim(),
-                    );
+                  name: name,
+                  phone: _phoneCtrl.text.trim(),
+                );
                 if (context.mounted) {
                   Navigator.of(context).pop(_PickResult(customer));
                 }
