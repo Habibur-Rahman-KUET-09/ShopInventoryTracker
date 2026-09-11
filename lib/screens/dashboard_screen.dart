@@ -36,12 +36,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         start = DateTime(now.year, now.month, now.day);
         break;
       case _Period.weekly:
-        start = DateTime(now.year, now.month, now.day)
-            .subtract(const Duration(days: 6));
+        start = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).subtract(const Duration(days: 6));
         break;
       case _Period.monthly:
-        start = DateTime(now.year, now.month, now.day)
-            .subtract(const Duration(days: 29));
+        start = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).subtract(const Duration(days: 29));
         break;
     }
     return all.where((s) => !s.dateTime.isBefore(start)).toList();
@@ -53,25 +59,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
     switch (_period) {
       case _Period.daily:
         return List.generate(7, (i) {
-          final day = DateTime(now.year, now.month, now.day)
-              .subtract(Duration(days: 6 - i));
+          final day = DateTime(
+            now.year,
+            now.month,
+            now.day,
+          ).subtract(Duration(days: 6 - i));
           final total = all
-              .where((s) =>
-                  s.dateTime.year == day.year &&
-                  s.dateTime.month == day.month &&
-                  s.dateTime.day == day.day)
+              .where(
+                (s) =>
+                    s.dateTime.year == day.year &&
+                    s.dateTime.month == day.month &&
+                    s.dateTime.day == day.day,
+              )
               .fold<double>(0, (sum, s) => sum + s.totalAmount);
           return _ChartBucket(Formatters.dayLabel(day), total);
         });
       case _Period.weekly:
         return List.generate(6, (i) {
-          final weekStart = DateTime(now.year, now.month, now.day)
-              .subtract(Duration(days: (5 - i) * 7 + now.weekday - 1));
+          final weekStart = DateTime(
+            now.year,
+            now.month,
+            now.day,
+          ).subtract(Duration(days: (5 - i) * 7 + now.weekday - 1));
           final weekEnd = weekStart.add(const Duration(days: 6));
           final total = all
-              .where((s) =>
-                  !s.dateTime.isBefore(weekStart) &&
-                  s.dateTime.isBefore(weekEnd.add(const Duration(days: 1))))
+              .where(
+                (s) =>
+                    !s.dateTime.isBefore(weekStart) &&
+                    s.dateTime.isBefore(weekEnd.add(const Duration(days: 1))),
+              )
               .fold<double>(0, (sum, s) => sum + s.totalAmount);
           return _ChartBucket(Formatters.dayLabel(weekStart), total);
         });
@@ -80,8 +96,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final month = DateTime(now.year, now.month - (5 - i), 1);
           final nextMonth = DateTime(month.year, month.month + 1, 1);
           final total = all
-              .where((s) =>
-                  !s.dateTime.isBefore(month) && s.dateTime.isBefore(nextMonth))
+              .where(
+                (s) =>
+                    !s.dateTime.isBefore(month) &&
+                    s.dateTime.isBefore(nextMonth),
+              )
               .fold<double>(0, (sum, s) => sum + s.totalAmount);
           return _ChartBucket(_monthLabel(month), total);
         });
@@ -101,7 +120,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'সেপ্ট',
       'অক্টো',
       'নভে',
-      'ডিসে'
+      'ডিসে',
     ];
     return names[d.month - 1];
   }
@@ -123,15 +142,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final allSales = context.watch<SaleProvider>().sales;
     final products = context.watch<ProductProvider>().products;
-    final lowStockCount =
-        context.watch<ProductProvider>().lowStockProducts.length;
+    final lowStockCount = context
+        .watch<ProductProvider>()
+        .lowStockProducts
+        .length;
     final totalDue = context.watch<DueProvider>().totalOutstanding;
 
     final periodSales = _salesInPeriod(allSales);
-    final totalSales =
-        periodSales.fold<double>(0, (sum, s) => sum + s.totalAmount);
-    final totalProfit =
-        periodSales.fold<double>(0, (sum, s) => sum + s.totalProfit);
+    final totalSales = periodSales.fold<double>(
+      0,
+      (sum, s) => sum + s.totalAmount,
+    );
+    final totalProfit = periodSales.fold<double>(
+      0,
+      (sum, s) => sum + s.totalProfit,
+    );
     final buckets = _chartBuckets(allSales);
     final topProducts = _topProducts(periodSales);
     final maxBucketValue = buckets.isEmpty
@@ -146,18 +171,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: const Icon(Icons.people_outline),
             tooltip: 'গ্রাহক',
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => const CustomersScreen(),
-              ));
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const CustomersScreen()),
+              );
             },
           ),
           IconButton(
             icon: const Icon(Icons.bar_chart_outlined),
             tooltip: 'রিপোর্ট',
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => const ReportsScreen(),
-              ));
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const ReportsScreen()));
             },
           ),
           PopupMenuButton<String>(
@@ -169,9 +194,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
             onSelected: (_) {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => const BackupScreen(),
-              ));
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const BackupScreen()));
             },
           ),
         ],
@@ -193,9 +218,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             childAspectRatio: 1.5,
             children: [
               GestureDetector(
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const SalesScreen(),
-                )),
+                onTap: () => Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const SalesScreen())),
                 child: StatCard(
                   label: 'মোট বিক্রি',
                   value: Formatters.taka(totalSales),
@@ -204,9 +229,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               GestureDetector(
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const ReportsScreen(),
-                )),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ReportsScreen()),
+                ),
                 child: StatCard(
                   label: 'মোট লাভ',
                   value: Formatters.taka(totalProfit),
@@ -215,9 +240,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               GestureDetector(
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const DueScreen(),
-                )),
+                onTap: () => Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => const DueScreen())),
                 child: StatCard(
                   label: 'মোট বাকি',
                   value: Formatters.taka(totalDue),
@@ -226,9 +250,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               GestureDetector(
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const StockScreen(lowStockOnly: true),
-                )),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const StockScreen(lowStockOnly: true),
+                  ),
+                ),
                 child: StatCard(
                   label: 'লো-স্টক পণ্য',
                   value: '$lowStockCount টি',
@@ -239,75 +265,109 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          const Text(
-            'বিক্রির ট্রেন্ড',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          InkWell(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const ReportsScreen(initialTabIndex: 1),
+              ),
+            ),
+            child: const Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'বিক্রির ট্রেন্ড',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Text(
+                  'বিস্তারিত রিপোর্ট',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: AppTheme.primaryGreen,
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppTheme.primaryGreen,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
-          Container(
-            height: 220,
-            padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.grey.shade200),
+          GestureDetector(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const ReportsScreen(initialTabIndex: 1),
+              ),
             ),
-            child: buckets.every((b) => b.value == 0)
-                ? Center(
-                    child: Text('এখনো কোনো বিক্রি নেই',
-                        style: TextStyle(color: Colors.grey.shade500)),
-                  )
-                : BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: maxBucketValue == 0 ? 10 : maxBucketValue * 1.25,
-                      gridData: const FlGridData(show: false),
-                      borderData: FlBorderData(show: false),
-                      titlesData: FlTitlesData(
-                        leftTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              final i = value.toInt();
-                              if (i < 0 || i >= buckets.length) {
-                                return const SizedBox.shrink();
-                              }
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 6),
-                                child: Text(
-                                  buckets[i].label,
-                                  style: const TextStyle(fontSize: 10.5),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
+            child: Container(
+              height: 220,
+              padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: buckets.every((b) => b.value == 0)
+                  ? Center(
+                      child: Text(
+                        'এখনো কোনো বিক্রি নেই',
+                        style: TextStyle(color: Colors.grey.shade500),
                       ),
-                      barGroups: [
-                        for (int i = 0; i < buckets.length; i++)
-                          BarChartGroupData(
-                            x: i,
-                            barRods: [
-                              BarChartRodData(
-                                toY: buckets[i].value,
-                                color: AppTheme.primaryGreen,
-                                width: 16,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ],
+                    )
+                  : BarChart(
+                      BarChartData(
+                        alignment: BarChartAlignment.spaceAround,
+                        maxY: maxBucketValue == 0 ? 10 : maxBucketValue * 1.25,
+                        gridData: const FlGridData(show: false),
+                        borderData: FlBorderData(show: false),
+                        titlesData: FlTitlesData(
+                          leftTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
                           ),
-                      ],
+                          topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, meta) {
+                                final i = value.toInt();
+                                if (i < 0 || i >= buckets.length) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: Text(
+                                    buckets[i].label,
+                                    style: const TextStyle(fontSize: 10.5),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        barGroups: [
+                          for (int i = 0; i < buckets.length; i++)
+                            BarChartGroupData(
+                              x: i,
+                              barRods: [
+                                BarChartRodData(
+                                  toY: buckets[i].value,
+                                  color: AppTheme.primaryGreen,
+                                  width: 16,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
+            ),
           ),
           const SizedBox(height: 20),
           const Text(
@@ -318,8 +378,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (topProducts.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text('এই সময়ে কোনো বিক্রি হয়নি',
-                  style: TextStyle(color: Colors.grey.shade500)),
+              child: Text(
+                'এই সময়ে কোনো বিক্রি হয়নি',
+                style: TextStyle(color: Colors.grey.shade500),
+              ),
             )
           else
             Card(
@@ -328,8 +390,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   for (int i = 0; i < topProducts.length; i++)
                     ListTile(
                       leading: CircleAvatar(
-                        backgroundColor:
-                            AppTheme.primaryGreen.withValues(alpha: 0.12),
+                        backgroundColor: AppTheme.primaryGreen.withValues(
+                          alpha: 0.12,
+                        ),
                         foregroundColor: AppTheme.primaryGreen,
                         child: Text('${i + 1}'),
                       ),
@@ -339,14 +402,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       onTap: () {
-                        final match = products
-                            .where((p) => p.name == topProducts[i].key);
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => ReportsScreen(
-                            initialProductId:
-                                match.isEmpty ? null : match.first.id,
+                        final match = products.where(
+                          (p) => p.name == topProducts[i].key,
+                        );
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => ReportsScreen(
+                              initialProductId: match.isEmpty
+                                  ? null
+                                  : match.first.id,
+                            ),
                           ),
-                        ));
+                        );
                       },
                     ),
                 ],

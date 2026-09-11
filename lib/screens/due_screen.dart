@@ -13,7 +13,11 @@ class DueScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dueProvider = context.watch<DueProvider>();
-    final customers = dueProvider.customers;
+    // Customers who have settled their বাকি don't clutter this screen —
+    // they still show up in the গ্রাহক directory.
+    final customers = dueProvider.customers
+        .where((c) => c.totalDue != 0)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(title: const Text('বাকি হিসাব')),
@@ -30,14 +34,17 @@ class DueScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('মোট বকেয়া',
-                    style: TextStyle(color: Colors.white70, fontSize: 14)),
+                const Text(
+                  'মোট বকেয়া',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
                 Text(
                   Formatters.taka(dueProvider.totalOutstanding),
                   style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold),
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -53,10 +60,13 @@ class DueScreen extends StatelessWidget {
                       return Card(
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 6),
+                            horizontal: 14,
+                            vertical: 6,
+                          ),
                           leading: CircleAvatar(
-                            backgroundColor:
-                                AppTheme.primaryGreen.withValues(alpha: 0.12),
+                            backgroundColor: AppTheme.primaryGreen.withValues(
+                              alpha: 0.12,
+                            ),
                             foregroundColor: AppTheme.primaryGreen,
                             child: Text(
                               customer.name.isNotEmpty
@@ -64,9 +74,10 @@ class DueScreen extends StatelessWidget {
                                   : '?',
                             ),
                           ),
-                          title: Text(customer.name,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w600)),
+                          title: Text(
+                            customer.name,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
                           subtitle: customer.phone.isNotEmpty
                               ? Text(customer.phone)
                               : null,
@@ -80,10 +91,13 @@ class DueScreen extends StatelessWidget {
                             ),
                           ),
                           onTap: () {
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (_) => DueCustomerDetailScreen(
-                                  customerId: customer.id),
-                            ));
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => DueCustomerDetailScreen(
+                                  customerId: customer.id,
+                                ),
+                              ),
+                            );
                           },
                         ),
                       );
@@ -95,12 +109,12 @@ class DueScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'due_fab',
         onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const AddDueCustomerScreen(),
-          ));
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AddDueCustomerScreen()),
+          );
         },
-        icon: const Icon(Icons.person_add_alt_1),
-        label: const Text('নতুন গ্রাহক'),
+        icon: const Icon(Icons.add),
+        label: const Text('বাকি যোগ করুন'),
       ),
     );
   }
@@ -117,8 +131,11 @@ class _EmptyDue extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.receipt_long_outlined,
-                size: 64, color: Colors.grey.shade400),
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
             const SizedBox(height: 16),
             Text(
               'কোনো বাকির হিসাব নেই।',

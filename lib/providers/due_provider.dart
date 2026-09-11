@@ -50,9 +50,7 @@ class DueProvider extends ChangeNotifier {
   List<DueCustomer> searchByName(String query) {
     final q = query.trim().toLowerCase();
     if (q.isEmpty) return const [];
-    return _customers
-        .where((c) => c.name.toLowerCase().contains(q))
-        .toList();
+    return _customers.where((c) => c.name.toLowerCase().contains(q)).toList();
   }
 
   Future<DueCustomer> addCustomer({
@@ -62,11 +60,13 @@ class DueProvider extends ChangeNotifier {
   }) async {
     final customer = DueCustomer(id: _uuid.v4(), name: name, phone: phone);
     if (initialDue > 0) {
-      customer.transactions.add(DueTransaction(
-        id: _uuid.v4(),
-        amount: initialDue,
-        type: DueTransactionType.added,
-      ));
+      customer.transactions.add(
+        DueTransaction(
+          id: _uuid.v4(),
+          amount: initialDue,
+          type: DueTransactionType.added,
+        ),
+      );
     }
     await _repository.save(customer);
     _load();
@@ -94,12 +94,45 @@ class DueProvider extends ChangeNotifier {
   }) async {
     final customer = byId(customerId);
     if (customer == null) return;
-    customer.transactions.add(DueTransaction(
-      id: _uuid.v4(),
+    customer.transactions.add(
+      DueTransaction(id: _uuid.v4(), amount: amount, type: type, note: note),
+    );
+    await _repository.save(customer);
+    _load();
+  }
+
+  Future<void> updateTransaction(
+    String customerId,
+    String transactionId, {
+    required double amount,
+    required DueTransactionType type,
+    String note = '',
+  }) async {
+    final customer = byId(customerId);
+    if (customer == null) return;
+    final index = customer.transactions.indexWhere(
+      (t) => t.id == transactionId,
+    );
+    if (index == -1) return;
+    final old = customer.transactions[index];
+    customer.transactions[index] = DueTransaction(
+      id: old.id,
       amount: amount,
       type: type,
+      date: old.date,
       note: note,
-    ));
+    );
+    await _repository.save(customer);
+    _load();
+  }
+
+  Future<void> deleteTransaction(
+    String customerId,
+    String transactionId,
+  ) async {
+    final customer = byId(customerId);
+    if (customer == null) return;
+    customer.transactions.removeWhere((t) => t.id == transactionId);
     await _repository.save(customer);
     _load();
   }

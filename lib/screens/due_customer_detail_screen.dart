@@ -22,7 +22,9 @@ class DueCustomerDetailScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
-          type == DueTransactionType.added ? 'বাকি যোগ করুন' : 'পরিশোধ যোগ করুন',
+          type == DueTransactionType.added
+              ? 'বাকি যোগ করুন'
+              : 'পরিশোধ যোগ করুন',
         ),
         content: TextField(
           controller: amountCtrl,
@@ -46,10 +48,93 @@ class DueCustomerDetailScreen extends StatelessWidget {
       ),
     );
     if (result != null && result > 0 && context.mounted) {
-      await context
-          .read<DueProvider>()
-          .addTransaction(customerId, result, type);
+      await context.read<DueProvider>().addTransaction(
+        customerId,
+        result,
+        type,
+      );
     }
+  }
+
+  Future<void> _editTransaction(
+    BuildContext context,
+    DueTransaction transaction,
+  ) async {
+    final amountCtrl = TextEditingController(
+      text: _trimZero(transaction.amount),
+    );
+    DueTransactionType type = transaction.type;
+    final result = await showDialog<Map<String, Object>>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          title: const Text('লেনদেন এডিট করুন'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: amountCtrl,
+                autofocus: true,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(labelText: 'পরিমাণ (৳)'),
+              ),
+              const SizedBox(height: 14),
+              SegmentedButton<DueTransactionType>(
+                segments: const [
+                  ButtonSegment(
+                    value: DueTransactionType.added,
+                    label: Text('বাকি যোগ'),
+                  ),
+                  ButtonSegment(
+                    value: DueTransactionType.paid,
+                    label: Text('পরিশোধ'),
+                  ),
+                ],
+                selected: {type},
+                onSelectionChanged: (s) => setState(() => type = s.first),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop({'delete': true}),
+              child: const Text('মুছুন', style: TextStyle(color: Colors.red)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('বাতিল'),
+            ),
+            TextButton(
+              onPressed: () {
+                final amount = double.tryParse(amountCtrl.text);
+                if (amount == null || amount <= 0) return;
+                Navigator.of(ctx).pop({'amount': amount, 'type': type});
+              },
+              child: const Text('সংরক্ষণ করুন'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (result == null || !context.mounted) return;
+    final dueProvider = context.read<DueProvider>();
+    if (result['delete'] == true) {
+      await dueProvider.deleteTransaction(customerId, transaction.id);
+    } else {
+      await dueProvider.updateTransaction(
+        customerId,
+        transaction.id,
+        amount: result['amount'] as double,
+        type: result['type'] as DueTransactionType,
+      );
+    }
+  }
+
+  static String _trimZero(double value) {
+    if (value == value.roundToDouble()) return value.toInt().toString();
+    return value.toString();
   }
 
   Future<void> _editCustomer(BuildContext context, DueCustomer customer) async {
@@ -98,15 +183,17 @@ class DueCustomerDetailScreen extends StatelessWidget {
     );
     if (saved == true && context.mounted) {
       await context.read<DueProvider>().updateCustomerInfo(
-            customer.id,
-            name: nameCtrl.text.trim(),
-            phone: phoneCtrl.text.trim(),
-          );
+        customer.id,
+        name: nameCtrl.text.trim(),
+        phone: phoneCtrl.text.trim(),
+      );
     }
   }
 
   Future<void> _confirmDeleteCustomer(
-      BuildContext context, DueCustomer customer) async {
+    BuildContext context,
+    DueCustomer customer,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -114,8 +201,9 @@ class DueCustomerDetailScreen extends StatelessWidget {
         content: Text('"${customer.name}" এর সব হিসাব মুছে যাবে।'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('বাতিল')),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('বাতিল'),
+          ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('মুছুন', style: TextStyle(color: Colors.red)),
@@ -167,20 +255,25 @@ class DueCustomerDetailScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                const Text('মোট বাকি',
-                    style: TextStyle(color: Colors.white70, fontSize: 14)),
+                const Text(
+                  'মোট বাকি',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   Formatters.taka(customer.totalDue),
                   style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold),
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 if (customer.phone.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  Text(customer.phone,
-                      style: const TextStyle(color: Colors.white70)),
+                  Text(
+                    customer.phone,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
                 ],
               ],
             ),
@@ -213,8 +306,10 @@ class DueCustomerDetailScreen extends StatelessWidget {
           Expanded(
             child: transactions.isEmpty && sales.isEmpty
                 ? Center(
-                    child: Text('কোনো লেনদেন নেই',
-                        style: TextStyle(color: Colors.grey.shade500)),
+                    child: Text(
+                      'কোনো লেনদেন নেই',
+                      style: TextStyle(color: Colors.grey.shade500),
+                    ),
                   )
                 : ListView(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -222,7 +317,10 @@ class DueCustomerDetailScreen extends StatelessWidget {
                       if (transactions.isNotEmpty) ...[
                         const _SectionHeader('বাকি লেনদেন'),
                         for (final t in transactions)
-                          _TransactionTile(transaction: t),
+                          _TransactionTile(
+                            transaction: t,
+                            onTap: () => _editTransaction(context, t),
+                          ),
                       ],
                       if (sales.isNotEmpty) ...[
                         const _SectionHeader('কেনাকাটার ইতিহাস'),
@@ -268,28 +366,38 @@ class _SectionHeader extends StatelessWidget {
 
 class _TransactionTile extends StatelessWidget {
   final DueTransaction transaction;
-  const _TransactionTile({required this.transaction});
+  final VoidCallback onTap;
+  const _TransactionTile({required this.transaction, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final isAdded = transaction.type == DueTransactionType.added;
     return Card(
       child: ListTile(
+        onTap: onTap,
         leading: CircleAvatar(
           backgroundColor:
-              (isAdded ? AppTheme.dangerRed : AppTheme.primaryGreen)
-                  .withValues(alpha: 0.12),
+              (isAdded ? AppTheme.dangerRed : AppTheme.primaryGreen).withValues(
+                alpha: 0.12,
+              ),
           foregroundColor: isAdded ? AppTheme.dangerRed : AppTheme.primaryGreen,
           child: Icon(isAdded ? Icons.arrow_upward : Icons.arrow_downward),
         ),
         title: Text(isAdded ? 'বাকি যোগ হয়েছে' : 'পরিশোধ হয়েছে'),
         subtitle: Text(Formatters.dateTime(transaction.date)),
-        trailing: Text(
-          '${isAdded ? '+' : '-'}${Formatters.taka(transaction.amount)}',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isAdded ? AppTheme.dangerRed : AppTheme.primaryGreen,
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${isAdded ? '+' : '-'}${Formatters.taka(transaction.amount)}',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isAdded ? AppTheme.dangerRed : AppTheme.primaryGreen,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.edit_outlined, size: 16, color: Colors.grey),
+          ],
         ),
       ),
     );
